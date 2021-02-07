@@ -17,7 +17,7 @@ class Main(QtWidgets.QDialog):
         self.report = Report(self)
 
     def clicked(self):
-        self.report.ui.label.setPixmap(QtGui.QPixmap("index222.png"))
+        self.report.ui.label.setPixmap(QtGui.QPixmap("output.png"))
         self.report.show()
 
 

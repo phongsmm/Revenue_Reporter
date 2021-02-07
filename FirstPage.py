@@ -2,6 +2,8 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import pymongo
+import pandas as pd
+import matplotlib as plt
 
 
 myserver = "mongodb+srv://admin:1234@cluster0.7voii.gcp.mongodb.net/<dbname>?retryWrites=true&w=majority"
@@ -70,13 +72,38 @@ class Ui_Dialog(object):
 
     def AddtoDB(self):
         with pymongo.MongoClient(myserver) as conn:
-            db = conn.get_database("PyProject")
-            found = db.Revenue.count_documents({"Date":self.dateEdit.dateTime().date()})
-            print(self.dateEdit.dateTime().date().getDate())
-            print(found)
+            try:
+                db = conn.get_database("PyProject")
+                found = db.Revenue.count_documents({"Date": self.dateEdit.dateTime().toPyDateTime()})
+                if found > 0:
+                    db.Revenue.update_one({"Date":self.dateEdit.dateTime().toPyDateTime()},{"$set":{
+                        self.comboBox.currentText():float(self.lineEdit_2.text())
+                    }})
+                    print(self.comboBox.currentText())
+                    print(float(self.lineEdit_2.text()))
+                    print("Update")
+                else:
+                    db.Revenue.insert_one({})
+                    print("insert")
+
+                self.Display()
+
+            except Exception as e:
+                print(e)
+
 
 
     def Display(self):
+
+        self.revenue = {'Date': [],
+                'Toys': [],
+                'Foods':[],
+                'Furniture':[],
+                'Clothes':[],
+                'Electronics':[]
+                }
+
+
         with pymongo.MongoClient(myserver) as conn:
             db = conn.get_database("PyProject")
             cur = db.Revenue.find({}).sort([('Date', -1)])
@@ -87,11 +114,32 @@ class Ui_Dialog(object):
 
             for i, v in enumerate(cur):
                 self.tableWidget.setItem(i, 0, QtWidgets.QTableWidgetItem(str(v['Date'].date())))
+                self.revenue['Date'].append(str(v['Date'].date()))
+                print(v['Date'])
                 self.tableWidget.setItem(i, 1, QtWidgets.QTableWidgetItem(str(v['Toys'])))
+                self.revenue['Toys'].append(v['Toys'])
                 self.tableWidget.setItem(i, 2, QtWidgets.QTableWidgetItem(str(v['Foods'])))
+                self.revenue['Foods'].append(v['Foods'])
                 self.tableWidget.setItem(i, 3, QtWidgets.QTableWidgetItem(str(v['Furniture'])))
+                self.revenue['Furniture'].append(v['Furniture'])
                 self.tableWidget.setItem(i, 4, QtWidgets.QTableWidgetItem(str(v['Clothes'])))
+                self.revenue['Clothes'].append(v['Clothes'])
                 self.tableWidget.setItem(i, 5, QtWidgets.QTableWidgetItem(str(v['Electronics'])))
+                self.revenue['Electronics'].append(v['Electronics'])
+
+            df = pd.DataFrame(self.revenue,columns=['Date','Toys','Furniture','Clothes','Electronics'])
+
+            year = df.Date.str[0:4]
+
+            sum = df.groupby(year)['Clothes'].sum()
+            print(sum)
+
+            plot = df.plot()
+            fig = plot.get_figure()
+            fig.savefig("output.png")
+
+
+
 
         header1 = QtWidgets.QTableWidgetItem("Date")
         header2 = QtWidgets.QTableWidgetItem("Toys")
@@ -106,6 +154,10 @@ class Ui_Dialog(object):
         self.tableWidget.setHorizontalHeaderItem(3, header4)
         self.tableWidget.setHorizontalHeaderItem(4, header5)
         self.tableWidget.setHorizontalHeaderItem(5, header6)
+
+
+
+
 
 
 
