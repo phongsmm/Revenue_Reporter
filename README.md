@@ -14,4 +14,4 @@ Revenue Reporter (ระบบรายงานรายได้ประจ�
 | python -m venv venv  | run install.bat |
 | venv\Scripts\activate  | run run.bat  |
 | (venv) pip install -r requirements.txt | |
-| python main.py||
+| (venv) python main.py||

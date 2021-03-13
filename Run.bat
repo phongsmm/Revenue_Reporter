@@ -1,2 +1,2 @@
 @ECHO OFF
-venv\Scripts\python.exe .\main.py
+venv\Scripts\activate |python main.py
